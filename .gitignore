@@ -1,0 +1,18 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+/Zamazimah.Api/bin
+/Zamazimah.Api/obj
+/Zamazimah.Data/bin
+/Zamazimah.Data/obj
+/Zamazimah.Core/bin
+/Zamazimah.Core/obj
+/Zamazimah.Services/bin
+/Zamazimah.Services/obj
+/Zamazimah.Models/bin
+/Zamazimah.Models/obj
+/Zamazimah.Entities/bin
+/Zamazimah.Entities/obj
+/Zamazimah.Api/Properties/PublishProfiles/*.user

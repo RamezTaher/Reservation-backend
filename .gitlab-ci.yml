@@ -1,0 +1,69 @@
+stages:
+  - package
+  - deploy_to_staging
+  - deploy_to_prod
+  
+package_backend:
+  stage: package
+  image: mcr.microsoft.com/dotnet/sdk:6.0
+  script:
+    - dotnet publish $CI_PROJECT_DIR/Zamazimah.Api/Zamazimah.Api.csproj -o $CI_PROJECT_DIR/dist --configuration Release
+  artifacts:
+    name: backend
+    paths:
+      - dist
+  tags:
+    - docker
+
+deploy_to_staging:
+  stage: deploy_to_staging
+  before_script: 
+  - "apt-get update -qq"
+  - "apt-get install -qq git"
+  - "which ssh-agent || ( apt-get install -qq openssh-client )"
+  - "eval $(ssh-agent -s)"
+  - "ssh-add <(echo \"$SSH_PRIVATE_KEY\")"
+  - "mkdir -p ~/.ssh"
+  - "[[ -f /.dockerenv ]] && echo -e \"Host *\\n\\tStrictHostKeyChecking no\\n\\n\" > ~/.ssh/config"
+  script:
+    # Deploy backend to staging
+    - ls
+    - cd dist
+    - ls
+    - scp -r ./* ubuntu@$SERVER_IP:/var/www/zamazimah 
+    - ssh ubuntu@$SERVER_IP "sudo systemctl stop zamazimah.service"
+    - ssh ubuntu@$SERVER_IP "sudo systemctl start zamazimah.service"
+  only:
+    - main
+  
+  variables:
+    GIT_STRATEGY: none
+  environment:
+    name: staging
+    url: https://api.zamazimah.joodlab.com 
+
+deploy_to_prod:
+  stage: deploy_to_prod
+  before_script: 
+  - "apt-get update -qq"
+  - "apt-get install -qq git"
+  - "which ssh-agent || ( apt-get install -qq openssh-client )"
+  - "eval $(ssh-agent -s)"
+  - "ssh-add <(echo \"$SSH_PRIVATE_KEY\")"
+  - "mkdir -p ~/.ssh"
+  - "[[ -f /.dockerenv ]] && echo -e \"Host *\\n\\tStrictHostKeyChecking no\\n\\n\" > ~/.ssh/config"
+  script:
+    # Deploy backend to prod
+    - ls
+    - cd dist
+    - ls
+    - scp -r ./* deployer@$SERVER_IP:/var/www/zamazimah 
+    - ssh deployer@$SERVER_IP "sudo systemctl stop zamazimah.service"
+    - ssh deployer@$SERVER_IP "sudo systemctl start zamazimah.service"
+  only:
+    - prod
+  variables:
+    GIT_STRATEGY: none
+  environment:
+    name: prod
+    url: https://api.zamazimah.com 
